@@ -1,5 +1,6 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
+import Link from 'next/link'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,11 +19,15 @@ export default function RootLayout({
       <body className={inter.className}>
         <nav className="bg-blue-600 text-white p-4">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Review Service</h1>
-            <div className="space-x-4">
-              <a href="/" className="hover:text-blue-200">Home</a>
-              <a href="/reviews" className="hover:text-blue-200">Reviews</a>
-              <a href="/submit" className="hover:text-blue-200">Submit Review</a>
+            <Link href="/" className="text-2xl font-bold">Review Service</Link>
+            <div className="space-x-4 flex items-center">
+              <Link href="/" className="hover:text-blue-200">Home</Link>
+              <Link href="/browse-reviews" className="hover:text-blue-200">Browse Reviews</Link>
+              <Link href="/compare" className="hover:text-blue-200">Compare</Link>
+              <Link href="/providers" className="hover:text-blue-200">Providers</Link>
+              <Link href="/deals" className="hover:text-blue-200">Deals</Link>
+              <Link href="/tools" className="hover:text-blue-200">Tools</Link>
+              <Link href="/submit" className="bg-white/10 px-3 py-1.5 rounded hover:bg-white/20 transition-colors">Submit Review</Link>
             </div>
           </div>
         </nav>
