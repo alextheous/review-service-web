@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Filters from '../../components/Filters';
+import SidebarFilters from '../../components/SidebarFilters';
 import PlanCard from '../../components/PlanCard';
 import Pagination from '../../components/Pagination';
 import CompareTray, { ComparePlanItem } from '../../components/CompareTray';
@@ -29,6 +29,7 @@ export default function CompareContent() {
   const [address, setAddress] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [compareIds, setCompareIds] = useState<number[]>(getInitialCompare());
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   // Persist compareIds to localStorage
   useEffect(() => {
@@ -103,118 +104,158 @@ export default function CompareContent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-28">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Compare Broadband Plans</h1>
-        <p className="text-gray-600 mb-6">Find the perfect internet plan for your needs</p>
-        
-        <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleAddressSearch} className="flex gap-3">
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter your address to see available plans"
-              className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Search Plans
-            </button>
-          </form>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Compare Broadband Plans</h1>
+            <p className="text-gray-600 mb-6">Find the perfect internet plan for your needs</p>
+            
+            <div className="max-w-2xl mx-auto">
+              <form onSubmit={handleAddressSearch} className="flex gap-3">
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Enter your address to see available plans"
+                  className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Search Plans
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 
       {hasSearched && (
-        <>
-          <Filters onFiltersChange={handleFiltersChange} />
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800">
-                {filteredPlans.length} plans available{address && ` for ${address}`}
-              </h2>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-600">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <div className="container mx-auto px-4 py-8">
+          {/* Mobile Filters Toggle */}
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+              className="w-full bg-white border border-gray-300 rounded-lg p-3 flex items-center justify-between"
+            >
+              <span className="font-medium text-gray-900">Filters</span>
+              <svg 
+                className={`w-5 h-5 transition-transform ${isMobileFiltersOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="speed-high">Speed: Fastest First</option>
-                <option value="rating">Highest Rated</option>
-              </select>
-            </div>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
 
-          {filteredPlans.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 gap-6 mb-8">
-                {currentPlans.map((plan) => {
-                  const extras = getCardExtras(plan.provider);
-                  const checked = compareIds.includes(plan.id);
-                  return (
-                    <div key={plan.id}>
-                      <PlanCard
-                        plan={plan}
-                        badge={extras.badge}
-                        score={extras.score}
-                        monthlyNote={extras.monthlyNote}
-                        compareChecked={checked}
-                        onCompareToggle={() => toggleCompare(plan.id)}
-                      />
-                      <div className="mt-2 text-right">
-                        <button
-                          onClick={() => toggleCompare(plan.id)}
-                          className="text-sm text-sky-700 underline hover:text-sky-900"
-                        >
-                          {compareIds.includes(plan.id) ? 'Remove from comparison' : 'Add to comparison'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+          {/* Two Column Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Sidebar Filters - Left Column */}
+            <div className={`lg:col-span-3 ${isMobileFiltersOpen ? 'block' : 'hidden lg:block'}`}>
+              <SidebarFilters onFiltersChange={handleFiltersChange} />
+            </div>
+
+            {/* Main Content - Right Column */}
+            <div className="lg:col-span-9">
+              {/* Results Header */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      {filteredPlans.length} plans available{address && ` for ${address}`}
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Showing {startIndex + 1}-{Math.min(startIndex + plansPerPage, filteredPlans.length)} of {filteredPlans.length} results
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-600 text-sm">Sort by:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => handleSortChange(e.target.value)}
+                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    >
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="price-high">Price: High to Low</option>
+                      <option value="speed-high">Speed: Fastest First</option>
+                      <option value="rating">Highest Rated</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-              {compareIds.length >= 2 && (
-                <div className="mb-4 flex justify-center">
-                  <button
-                    className="px-6 py-2 bg-amber-500 text-white rounded-md shadow hover:bg-amber-600"
-                    onClick={() => router.push('/compare/full')}
+
+              {/* Plans Grid */}
+              {filteredPlans.length > 0 ? (
+                <>
+                  <div className="space-y-6 mb-8">
+                    {currentPlans.map((plan) => {
+                      const extras = getCardExtras(plan.provider);
+                      const checked = compareIds.includes(plan.id);
+                      return (
+                        <div key={plan.id} className="bg-white rounded-lg shadow-sm">
+                          <PlanCard
+                            plan={plan}
+                            badge={extras.badge}
+                            score={extras.score}
+                            monthlyNote={extras.monthlyNote}
+                            compareChecked={checked}
+                            onCompareToggle={() => toggleCompare(plan.id)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Pagination */}
+                  <div className="flex justify-center mb-8">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                  
+                  {/* Full Comparison Button */}
+                  {compareIds.length >= 2 && (
+                    <div className="flex justify-center mb-8">
+                      <button
+                        className="px-6 py-3 bg-amber-500 text-white rounded-md shadow hover:bg-amber-600 transition-colors font-medium"
+                        onClick={() => router.push('/compare/full')}
+                      >
+                        See Full Side-by-Side Comparison ({compareIds.length} plans)
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* No Results */
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No plans found</h3>
+                  <p className="text-gray-600 mb-6">Try adjusting your filters to see more results.</p>
+                  <button 
+                    onClick={() => handleFiltersChange({})}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    See Full Side-by-Side Comparison
+                    Clear Filters
                   </button>
                 </div>
               )}
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">No plans found</h3>
-              <p className="text-gray-600 mb-4">Try adjusting your filters to see more results.</p>
-              <button 
-                onClick={() => handleFiltersChange({})}
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
-              >
-                Clear Filters
-              </button>
             </div>
-          )}
+          </div>
 
+          {/* Compare Tray */}
           <CompareTray
             items={compareItems}
             onRemove={(id) => setCompareIds(prev => prev.filter(x => x !== id))}
             onClear={() => setCompareIds([])}
           />
-        </>
+        </div>
       )}
     </div>
   );
