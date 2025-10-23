@@ -18,11 +18,13 @@ interface Plan {
   availability: string;
 }
 
-interface PlanCardProps {
+export interface PlanCardProps {
   plan: Plan;
   badge?: { label: string; color: 'green' | 'purple' | 'yellow' };
   score?: number;
   monthlyNote?: string;
+  compareChecked?: boolean;
+  onCompareToggle?: () => void;
 }
 
 const badgeColorMap = {
@@ -31,7 +33,7 @@ const badgeColorMap = {
   yellow: 'bg-yellow-100 text-yellow-800',
 };
 
-export default function PlanCard({ plan, badge, score = 95, monthlyNote }: PlanCardProps) {
+export default function PlanCard({ plan, badge, score = 95, monthlyNote, compareChecked = false, onCompareToggle }: PlanCardProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -51,13 +53,16 @@ export default function PlanCard({ plan, badge, score = 95, monthlyNote }: PlanC
             <span className="text-sm text-gray-500 hidden md:inline">/ {getContractLabel(plan.contract)}</span>
           </div>
           <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1 text-sm text-gray-700 cursor-pointer select-none">
+              <input type="checkbox" checked={compareChecked} onChange={onCompareToggle} className="accent-sky-600" />
+              Compare
+            </label>
             <button
               onClick={() => setOpen(!open)}
               className="text-sky-700 border border-sky-600 px-3 py-1.5 rounded hover:bg-sky-50 text-sm font-medium"
             >
               {open ? 'Hide info' : 'More info'}
             </button>
-            <button aria-label="add to comparison" className="text-gray-400 hover:text-gray-600 text-sm">▢</button>
           </div>
         </div>
 
