@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Filters from '../../components/Filters';
 import PlanCard from '../../components/PlanCard';
 import Pagination from '../../components/Pagination';
+import CompareTray, { ComparePlanItem } from '../../components/CompareTray';
 import { filterPlans, sortPlans } from '../../lib/utils';
 import plansData from '../../lib/data/plans.json';
 
@@ -16,11 +17,31 @@ export default function CompareContent() {
   const [sortBy, setSortBy] = useState('price-low');
   const [address, setAddress] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [compareIds, setCompareIds] = useState<number[]>([]);
   
   const plansPerPage = 6;
   const totalPages = Math.ceil(filteredPlans.length / plansPerPage);
   const startIndex = (currentPage - 1) * plansPerPage;
   const currentPlans = filteredPlans.slice(startIndex, startIndex + plansPerPage);
+
+  const toggleCompare = (id: number) => {
+    setCompareIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const compareItems: ComparePlanItem[] = useMemo(() => {
+    return (allPlans as any[])
+      .filter(p => compareIds.includes(p.id))
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        provider: p.provider,
+        speed_down: p.speed_down,
+        speed_up: p.speed_up,
+        data: p.data,
+        connection_type: p.connection_type,
+        price: p.price,
+      }));
+  }, [allPlans, compareIds]);
 
   const handleAddressSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +71,6 @@ export default function CompareContent() {
     }
   }, [searchParams]);
 
-  // Badge and note mapping to mimic reference visuals
   const getCardExtras = (provider: string) => {
     if (provider === 'Link3') {
       return { badge: { label: 'No Contract', color: 'green' as const }, score: 100, monthlyNote: '' };
@@ -65,7 +85,7 @@ export default function CompareContent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pb-28">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">Compare Broadband Plans</h1>
         <p className="text-gray-600 mb-6">Find the perfect internet plan for your needs</p>
@@ -119,13 +139,22 @@ export default function CompareContent() {
                 {currentPlans.map((plan) => {
                   const extras = getCardExtras(plan.provider);
                   return (
-                    <PlanCard
-                      key={plan.id}
-                      plan={plan}
-                      badge={extras.badge}
-                      score={extras.score}
-                      monthlyNote={extras.monthlyNote}
-                    />
+                    <div key={plan.id}>
+                      <PlanCard
+                        plan={plan}
+                        badge={extras.badge}
+                        score={extras.score}
+                        monthlyNote={extras.monthlyNote}
+                      />
+                      <div className="mt-2 text-right">
+                        <button
+                          onClick={() => toggleCompare(plan.id)}
+                          className="text-sm text-sky-700 underline hover:text-sky-900"
+                        >
+                          {compareIds.includes(plan.id) ? 'Remove from comparison' : 'Add to comparison'}
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -148,35 +177,13 @@ export default function CompareContent() {
               </button>
             </div>
           )}
-        </>
-      )}
 
-      {!hasSearched && (
-        <div className="text-center py-16">
-          <div className="text-8xl mb-6">🏠</div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Ready to Find Your Perfect Plan?</h2>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Enter your address above to see all available broadband plans in your area.
-            We'll show you speeds, prices, and help you find the best deal.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="text-center p-6">
-              <div className="text-3xl mb-3">⚡</div>
-              <h3 className="font-semibold mb-2">Compare Speeds</h3>
-              <p className="text-gray-600 text-sm">From basic browsing to 4K streaming</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-3xl mb-3">💰</div>
-              <h3 className="font-semibold mb-2">Best Prices</h3>
-              <p className="text-gray-600 text-sm">Exclusive deals and savings</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-3xl mb-3">🎆</div>
-              <h3 className="font-semibold mb-2">No Contracts</h3>
-              <p className="text-gray-600 text-sm">Flexible terms available</p>
-            </div>
-          </div>
-        </div>
+          <CompareTray
+            items={compareItems}
+            onRemove={(id) => setCompareIds(prev => prev.filter(x => x !== id))}
+            onClear={() => setCompareIds([])}
+          />
+        </>
       )}
     </div>
   );
