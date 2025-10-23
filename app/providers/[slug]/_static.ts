@@ -1,4 +1,4 @@
-import providers from '../../lib/data/providers.json';
+import providers from '../../../lib/data/providers.json';
 
 // Generate static params for provider slugs
 export async function generateStaticParams() {
