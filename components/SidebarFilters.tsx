@@ -23,15 +23,16 @@ const SPEED_BUCKETS = [
   { key: '900+', label: '900 Mbps +', min: 900 }
 ] as const;
 
-function applyBaseFilters(plans: any[], filters: FiltersState) {
+function applyFilters(plans: any[], filters: Partial<FiltersState>) {
   return plans.filter(p => {
-    const byConn = filters.connectionType === 'all' || p.connection_type === filters.connectionType;
-    const byPkg = !filters.packageType?.length || filters.packageType.some((pkg: string) => {
+    const byConn = !filters.connectionType || filters.connectionType === 'all' || p.connection_type === filters.connectionType;
+    const byPkg = !filters.packageType || !filters.packageType.length || filters.packageType.some((pkg: string) => {
       if (pkg === 'broadband') return true; // all internet plans
       if (pkg === 'broadband-tv') return p.perks?.some((x: string) => /tv|iptv/i.test(x));
       return true;
     });
-    return byConn && byPkg;
+    const bySpeed = !filters.speedRange || SPEED_BUCKETS.find(b => b.key === filters.speedRange)!.min <= p.speed_down;
+    return byConn && byPkg && bySpeed;
   });
 }
 
@@ -43,21 +44,21 @@ export default function SidebarFilters({ onFiltersChange, initialFilters = {} }:
     specialOffers: initialFilters.specialOffers || [],
   });
 
-  const baseFiltered = useMemo(() => applyBaseFilters(plansData as any[], filters), [filters.connectionType, filters.packageType]);
-
-  const speedCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    SPEED_BUCKETS.forEach(b => {
-      counts[b.key] = baseFiltered.filter(p => p.speed_down >= b.min).length;
-    });
+  // Prospective counts: for each option, add it to current filters and compute results length
+  const prospectiveCounts = useMemo(() => {
+    const base = plansData as any[];
+    const counts = {
+      packages: {
+        broadband: applyFilters(base, { ...filters, packageType: ['broadband'] }).length,
+        broadbandTv: applyFilters(base, { ...filters, packageType: ['broadband-tv'] }).length,
+      },
+      speeds: SPEED_BUCKETS.reduce((acc, b) => {
+        acc[b.key] = applyFilters(base, { ...filters, speedRange: b.key }).length;
+        return acc;
+      }, {} as Record<string, number>)
+    };
     return counts;
-  }, [baseFiltered]);
-
-  const packageCounts = useMemo(() => {
-    const all = baseFiltered.length; // after connection type filter
-    const tv = baseFiltered.filter(p => p.perks?.some((x: string) => /tv|iptv/i.test(x))).length;
-    return { broadband: all, broadbandTv: tv };
-  }, [baseFiltered]);
+  }, [filters]);
 
   useEffect(() => {
     onFiltersChange(filters);
@@ -90,11 +91,11 @@ export default function SidebarFilters({ onFiltersChange, initialFilters = {} }:
         <h3 className="font-semibold mb-3">Package</h3>
         <label className="flex items-center gap-2 mb-2">
           <input type="checkbox" checked={filters.packageType.includes('broadband')} onChange={(e)=>handleArrayFilterChange('packageType','broadband', e.target.checked)} className="rounded border-gray-300" />
-          <span className="text-sm text-gray-700">Broadband ({packageCounts.broadband})</span>
+          <span className="text-sm text-gray-700">Broadband ({prospectiveCounts.packages.broadband})</span>
         </label>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={filters.packageType.includes('broadband-tv')} onChange={(e)=>handleArrayFilterChange('packageType','broadband-tv', e.target.checked)} className="rounded border-gray-300" />
-          <span className="text-sm text-gray-700">Broadband + TV ({packageCounts.broadbandTv})</span>
+          <span className="text-sm text-gray-700">Broadband + TV ({prospectiveCounts.packages.broadbandTv})</span>
         </label>
       </div>
 
@@ -104,7 +105,7 @@ export default function SidebarFilters({ onFiltersChange, initialFilters = {} }:
           <label key={b.key} className="flex items-center gap-2 mb-3 cursor-pointer">
             <input type="radio" name="speedRange" value={b.key} checked={filters.speedRange===b.key} onChange={(e)=>handleFilterChange('speedRange', e.target.value)} className="text-blue-600" />
             <div className="flex-1">
-              <span className="text-sm text-gray-900">{b.label} ({speedCounts[b.key] ?? 0})</span>
+              <span className="text-sm text-gray-900">{b.label} ({prospectiveCounts.speeds[b.key] ?? 0})</span>
               <div className="text-xs text-gray-500">From ৳{b.min===10||b.min===30? '21.25': b.min===100? '21.99': b.min===300? '25.99': '30.99'}</div>
             </div>
           </label>
