@@ -26,7 +26,7 @@ export default function DealsPage() {
       id: 3,
       title: 'Rural Satellite Unlimited',
       provider: 'Rural Connect',
-      description: 'Reliable connectivity where fibre isn6#8217;t available. Weather resistant equipment.',
+      description: "Reliable connectivity where fibre isn't available. Weather resistant equipment.",
       badge: 'Rural',
       price: 69,
       perks: ['Rural coverage', 'Installation support']
