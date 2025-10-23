@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Filters from '../../components/Filters';
 import PlanCard from '../../components/PlanCard';
 import Pagination from '../../components/Pagination';
@@ -9,16 +9,34 @@ import CompareTray, { ComparePlanItem } from '../../components/CompareTray';
 import { filterPlans, sortPlans } from '../../lib/utils';
 import plansData from '../../lib/data/plans.json';
 
+function getInitialCompare(): number[] {
+  try {
+    if (typeof window !== 'undefined') {
+      const val = localStorage.getItem('comparePlans');
+      if (val) return JSON.parse(val);
+    }
+  } catch {}
+  return [];
+}
+
 export default function CompareContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [allPlans] = useState(plansData);
   const [filteredPlans, setFilteredPlans] = useState(plansData);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('price-low');
   const [address, setAddress] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
-  const [compareIds, setCompareIds] = useState<number[]>([]);
-  
+  const [compareIds, setCompareIds] = useState<number[]>(getInitialCompare());
+
+  // Persist compareIds to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('comparePlans', JSON.stringify(compareIds));
+    }
+  }, [compareIds]);
+
   const plansPerPage = 6;
   const totalPages = Math.ceil(filteredPlans.length / plansPerPage);
   const startIndex = (currentPage - 1) * plansPerPage;
@@ -138,6 +156,7 @@ export default function CompareContent() {
               <div className="grid grid-cols-1 gap-6 mb-8">
                 {currentPlans.map((plan) => {
                   const extras = getCardExtras(plan.provider);
+                  const checked = compareIds.includes(plan.id);
                   return (
                     <div key={plan.id}>
                       <PlanCard
@@ -145,6 +164,8 @@ export default function CompareContent() {
                         badge={extras.badge}
                         score={extras.score}
                         monthlyNote={extras.monthlyNote}
+                        compareChecked={checked}
+                        onCompareToggle={() => toggleCompare(plan.id)}
                       />
                       <div className="mt-2 text-right">
                         <button
@@ -163,6 +184,16 @@ export default function CompareContent() {
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
               />
+              {compareIds.length >= 2 && (
+                <div className="mb-4 flex justify-center">
+                  <button
+                    className="px-6 py-2 bg-amber-500 text-white rounded-md shadow hover:bg-amber-600"
+                    onClick={() => router.push('/compare/full')}
+                  >
+                    See Full Side-by-Side Comparison
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <div className="text-center py-12">
