@@ -50,6 +50,20 @@ export default function CompareContent() {
     }
   }, [searchParams]);
 
+  // Badge and note mapping to mimic reference visuals
+  const getCardExtras = (provider: string) => {
+    if (provider === 'Link3') {
+      return { badge: { label: 'No Contract', color: 'green' as const }, score: 100, monthlyNote: '' };
+    }
+    if (provider === 'Amber IT') {
+      return { badge: { label: 'New Customers', color: 'purple' as const }, score: 96, monthlyNote: 'first 12 months then ৳1,699' };
+    }
+    if (provider === 'BDCOM') {
+      return { badge: { label: 'Deal', color: 'yellow' as const }, score: 95, monthlyNote: 'first 12 months then ৳950' };
+    }
+    return { badge: undefined, score: 95, monthlyNote: '' };
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-8">
@@ -102,9 +116,18 @@ export default function CompareContent() {
           {filteredPlans.length > 0 ? (
             <>
               <div className="grid grid-cols-1 gap-6 mb-8">
-                {currentPlans.map((plan) => (
-                  <PlanCard key={plan.id} plan={plan} />
-                ))}
+                {currentPlans.map((plan) => {
+                  const extras = getCardExtras(plan.provider);
+                  return (
+                    <PlanCard
+                      key={plan.id}
+                      plan={plan}
+                      badge={extras.badge}
+                      score={extras.score}
+                      monthlyNote={extras.monthlyNote}
+                    />
+                  );
+                })}
               </div>
               <Pagination
                 currentPage={currentPage}
