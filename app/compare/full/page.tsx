@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import plansData from '../../lib/data/plans.json';
-import { formatPrice, formatSpeed, getConnectionTypeLabel, getContractLabel } from '../../lib/utils';
+import plansData from '../../../lib/data/plans.json';
+import { formatPrice, formatSpeed, getConnectionTypeLabel, getContractLabel } from '../../../lib/utils';
 
 function getCompareIds(): number[] {
   try {
