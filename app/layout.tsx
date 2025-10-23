@@ -5,8 +5,8 @@ import Link from 'next/link'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Review Service - Share Your Experiences',
-  description: 'A modern review service platform built with Next.js and React',
+  title: 'Bangladesh Broadband Deals – Compare & Save',
+  description: 'Compare fibre and wireless internet plans in Bangladesh. Find the best ISP deals in Dhaka, Chattogram, Sylhet and more.',
 }
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <nav className="bg-blue-600 text-white p-4">
           <div className="container mx-auto flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold">Review Service</Link>
+            <Link href="/" className="text-2xl font-bold">BD Broadband</Link>
             <div className="space-x-4 flex items-center">
               <Link href="/" className="hover:text-blue-200">Home</Link>
               <Link href="/browse-reviews" className="hover:text-blue-200">Browse Reviews</Link>
@@ -36,7 +36,7 @@ export default function RootLayout({
         </main>
         <footer className="bg-gray-800 text-white p-4 mt-8">
           <div className="container mx-auto text-center">
-            <p>&copy; 2025 Review Service. Built with Next.js & React.</p>
+            <p>&copy; 2025 BD Broadband. Built with Next.js & React.</p>
           </div>
         </footer>
       </body>
