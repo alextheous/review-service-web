@@ -101,15 +101,27 @@ export default function SidebarFilters({ onFiltersChange, initialFilters = {} }:
 
       <div className="border-b p-4">
         <h3 className="font-semibold mb-3">Download speeds</h3>
-        {SPEED_BUCKETS.map(b => (
-          <label key={b.key} className="flex items-center gap-2 mb-3 cursor-pointer">
-            <input type="radio" name="speedRange" value={b.key} checked={filters.speedRange===b.key} onChange={(e)=>handleFilterChange('speedRange', e.target.value)} className="text-blue-600" />
-            <div className="flex-1">
-              <span className="text-sm text-gray-900">{b.label} ({prospectiveCounts.speeds[b.key] ?? 0})</span>
-              <div className="text-xs text-gray-500">From ৳{b.min===10||b.min===30? '21.25': b.min===100? '21.99': b.min===300? '25.99': '30.99'}</div>
-            </div>
-          </label>
-        ))}
+        {SPEED_BUCKETS.map(b => {
+          const count = prospectiveCounts.speeds[b.key] ?? 0;
+          const disabled = count === 0;
+          return (
+            <label key={b.key} className={`flex items-center gap-2 mb-3 cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <input 
+                type="radio" 
+                name="speedRange" 
+                value={b.key} 
+                checked={filters.speedRange===b.key} 
+                onChange={(e)=>!disabled && handleFilterChange('speedRange', e.target.value)} 
+                className="text-blue-600" 
+                disabled={disabled}
+              />
+              <div className="flex-1">
+                <span className="text-sm text-gray-900">{b.label} <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{count}</span></span>
+                <div className="text-xs text-gray-500">From ৳{b.min===10||b.min===30? '21.25': b.min===100? '21.99': b.min===300? '25.99': '30.99'}</div>
+              </div>
+            </label>
+          );
+        })}
       </div>
 
       <div className="p-4">
