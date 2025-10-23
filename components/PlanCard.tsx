@@ -1,4 +1,5 @@
 import { formatPrice, formatSpeed, getConnectionTypeLabel, getContractLabel } from '../lib/utils';
+import { useState } from 'react';
 
 interface Plan {
   id: number;
@@ -31,6 +32,8 @@ const badgeColorMap = {
 };
 
 export default function PlanCard({ plan, badge, score = 95, monthlyNote }: PlanCardProps) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="rounded-lg border border-yellow-300 shadow-sm overflow-hidden bg-white">
       {badge && <div className="h-1 w-full bg-yellow-300" />}
@@ -47,7 +50,15 @@ export default function PlanCard({ plan, badge, score = 95, monthlyNote }: PlanC
             </h3>
             <span className="text-sm text-gray-500 hidden md:inline">/ {getContractLabel(plan.contract)}</span>
           </div>
-          <button aria-label="add to comparison" className="text-gray-400 hover:text-gray-600 text-sm">▢</button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setOpen(!open)}
+              className="text-sky-700 border border-sky-600 px-3 py-1.5 rounded hover:bg-sky-50 text-sm font-medium"
+            >
+              {open ? 'Hide info' : 'More info'}
+            </button>
+            <button aria-label="add to comparison" className="text-gray-400 hover:text-gray-600 text-sm">▢</button>
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 md:items-center">
@@ -94,6 +105,36 @@ export default function PlanCard({ plan, badge, score = 95, monthlyNote }: PlanC
             <button className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2 rounded-md">SELECT</button>
           </div>
         </div>
+
+        {/* Expandable details */}
+        {open && (
+          <div className="mt-4 border-t pt-4 text-sm text-gray-700 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Contract options</div>
+                <ul className="list-disc list-inside">
+                  <li>{getContractLabel(plan.contract)}</li>
+                  {plan.setup_fee > 0 && <li>Connection fee {formatPrice(plan.setup_fee)}</li>}
+                  <li>Termination fee: none listed</li>
+                </ul>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Included</div>
+                <ul className="list-disc list-inside">
+                  <li>{plan.modem_included ? 'Rental router included' : 'BYO Router allowed'}</li>
+                  {plan.perks?.map((p, i) => (<li key={i}>{p}</li>))}
+                </ul>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Availability</div>
+                <ul className="list-disc list-inside">
+                  <li>Areas: {plan.availability}</li>
+                  <li>Static IP: optional</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
