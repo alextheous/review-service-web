@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import SidebarFilters from '../../components/SidebarFilters';
 import PlanCard from '../../components/PlanCard';
 import Pagination from '../../components/Pagination';
@@ -101,6 +102,22 @@ export default function CompareContent() {
       return { badge: { label: 'Deal', color: 'yellow' as const }, score: 95, monthlyNote: 'first 12 months then ৳950' };
     }
     return { badge: undefined, score: 95, monthlyNote: '' };
+  };
+
+  const handleFullCompare = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('comparePlans', JSON.stringify(compareIds));
+      }
+    } catch {}
+    // Prefer client navigation; fall back to hard navigation to be bulletproof
+    try {
+      router.push('/compare/full');
+    } catch {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/compare/full';
+      }
+    }
   };
 
   return (
@@ -220,12 +237,15 @@ export default function CompareContent() {
                     />
                   </div>
                   
-                  {/* Full Comparison Button */}
+                  {/* Full Comparison CTA with robust navigation */}
                   {compareIds.length >= 2 && (
                     <div className="flex justify-center mb-8">
+                      <Link href="/compare/full" className="hidden" prefetch>
+                        {/* hidden link for prefetch/SSR correctness */}
+                      </Link>
                       <button
                         className="px-6 py-3 bg-amber-500 text-white rounded-md shadow hover:bg-amber-600 transition-colors font-medium"
-                        onClick={() => router.push('/compare/full')}
+                        onClick={handleFullCompare}
                       >
                         See Full Side-by-Side Comparison ({compareIds.length} plans)
                       </button>
