@@ -58,16 +58,49 @@ export function sortPlans(plans: any[], sortBy: string): any[] {
 }
 
 export function filterPlans(plans: any[], filters: any): any[] {
+  // Derive speed threshold from speedRange radio
+  const speedThreshold = (() => {
+    switch (filters?.speedRange) {
+      case '10+': return 10;
+      case '30+': return 30;
+      case '100+': return 100;
+      case '300+': return 300;
+      case '900+': return 900;
+      default: return null;
+    }
+  })();
+
+  const hasTv = (plan: any) => Array.isArray(plan.perks) && plan.perks.some((x: string) => /tv|iptv/i.test(x));
+  const wantsTv = Array.isArray(filters?.packageType) && filters.packageType.includes('broadband-tv');
+  const wantsBroadband = Array.isArray(filters?.packageType) && filters.packageType.includes('broadband');
+  const packageFilterActive = Array.isArray(filters?.packageType) && filters.packageType.length > 0;
+
   return plans.filter(plan => {
-    if (filters.minPrice && plan.price < Number(filters.minPrice)) return false;
-    if (filters.maxPrice && plan.price > Number(filters.maxPrice)) return false;
-    if (filters.minSpeed && plan.speed_down < Number(filters.minSpeed)) return false;
-    if (filters.connectionType && filters.connectionType !== 'all' && plan.connection_type !== filters.connectionType) return false;
-    if (filters.contract && filters.contract !== 'all' && plan.contract !== filters.contract) return false;
-    if (filters.dataType && filters.dataType !== 'all') {
+    if (filters?.minPrice && plan.price < Number(filters.minPrice)) return false;
+    if (filters?.maxPrice && plan.price > Number(filters.maxPrice)) return false;
+    if (filters?.minSpeed && plan.speed_down < Number(filters.minSpeed)) return false;
+
+    if (speedThreshold !== null && plan.speed_down < speedThreshold) return false;
+
+    if (filters?.connectionType && filters.connectionType !== 'all' && plan.connection_type !== filters.connectionType) return false;
+    if (filters?.contract && filters.contract !== 'all' && plan.contract !== filters.contract) return false;
+
+    if (filters?.dataType && filters.dataType !== 'all') {
       if (filters.dataType === 'unlimited' && plan.data !== 'Unlimited') return false;
       if (filters.dataType === 'capped' && plan.data === 'Unlimited') return false;
     }
+
+    if (packageFilterActive) {
+      const isBroadbandTv = hasTv(plan);
+      const matchesBroadband = wantsBroadband; // all plans are broadband
+      const matchesTv = wantsTv && isBroadbandTv;
+      // if both selected, allow either; if only tv selected, require tv; if only broadband selected, allow all
+      const onlyTv = wantsTv && !wantsBroadband;
+      if (onlyTv) return isBroadbandTv;
+      // if only broadband or both, pass
+      return matchesBroadband || matchesTv;
+    }
+
     return true;
   });
 }
