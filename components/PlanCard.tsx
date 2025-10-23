@@ -1,4 +1,4 @@
-import { formatPrice, formatSpeed, formatData, getConnectionTypeLabel, formatRating, getContractLabel } from '../lib/utils';
+import { formatPrice, formatSpeed, getConnectionTypeLabel, getContractLabel } from '../lib/utils';
 
 interface Plan {
   id: number;
@@ -19,87 +19,81 @@ interface Plan {
 
 interface PlanCardProps {
   plan: Plan;
+  badge?: { label: string; color: 'green' | 'purple' | 'yellow' };
+  score?: number;
+  monthlyNote?: string;
 }
 
-export default function PlanCard({ plan }: PlanCardProps) {
+const badgeColorMap = {
+  green: 'bg-green-100 text-green-800',
+  purple: 'bg-purple-100 text-purple-800',
+  yellow: 'bg-yellow-100 text-yellow-800',
+};
+
+export default function PlanCard({ plan, badge, score = 95, monthlyNote }: PlanCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800">{plan.name}</h3>
-          <p className="text-blue-600 font-medium">{plan.provider}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-green-600">{formatPrice(plan.price)}</div>
-          <div className="text-sm text-gray-500">per month</div>
-        </div>
-      </div>
+    <div className="rounded-lg border border-yellow-300 shadow-sm overflow-hidden bg-white">
+      {badge && <div className="h-1 w-full bg-yellow-300" />}
 
-      {/* Key Details */}
-      <div className="space-y-3 mb-4">
-        <div className="flex justify-between">
-          <span className="text-gray-600">Speed:</span>
-          <span className="font-medium">{formatSpeed(plan.speed_down)} down / {formatSpeed(plan.speed_up)} up</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Data:</span>
-          <span className="font-medium">{formatData(plan.data)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Connection:</span>
-          <span className="font-medium">{getConnectionTypeLabel(plan.connection_type)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Contract:</span>
-          <span className="font-medium">{getContractLabel(plan.contract)}</span>
-        </div>
-        {plan.setup_fee > 0 && (
-          <div className="flex justify-between">
-            <span className="text-gray-600">Setup Fee:</span>
-            <span className="font-medium text-orange-600">{formatPrice(plan.setup_fee)}</span>
+      <div className="p-4 md:p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {badge && (
+              <span className={`text-xs px-2 py-1 rounded ${badgeColorMap[badge.color]}`}>{badge.label}</span>
+            )}
+            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">{score}</span>
+            <h3 className="text-lg md:text-xl font-semibold text-sky-700">
+              {plan.name}
+            </h3>
+            <span className="text-sm text-gray-500 hidden md:inline">/ {getContractLabel(plan.contract)}</span>
           </div>
-        )}
-      </div>
-
-      {/* Rating */}
-      <div className="flex items-center mb-4">
-        <div className="flex text-yellow-400 mr-2">
-          {[...Array(5)].map((_, i) => (
-            <span key={i} className={i < Math.floor(plan.rating) ? 'text-yellow-400' : 'text-gray-300'}>
-              ★
-            </span>
-          ))}
+          <button aria-label="add to comparison" className="text-gray-400 hover:text-gray-600 text-sm">▢</button>
         </div>
-        <span className="text-sm text-gray-600">{formatRating(plan.rating)} rating</span>
-      </div>
 
-      {/* Perks */}
-      {plan.perks.length > 0 && (
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-1">
-            {plan.perks.map((perk, index) => (
-              <span key={index} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                {perk}
-              </span>
-            ))}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 md:items-center">
+          <div className="md:col-span-2 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-sm font-semibold text-gray-600">{plan.provider[0]}</span>
+            </div>
+            <div className="text-gray-800 font-medium">{plan.provider}</div>
+          </div>
+
+          <div className="md:col-span-3">
+            <div className="text-gray-500 text-sm">Speed ({getConnectionTypeLabel(plan.connection_type)})</div>
+            <div className="text-lg font-semibold">{formatSpeed(plan.speed_down)}/{formatSpeed(plan.speed_up)} <span className="text-sm font-normal text-gray-500">Mbps</span></div>
+          </div>
+
+          <div className="md:col-span-2">
+            <div className="text-gray-500 text-sm">Data</div>
+            <div className="text-lg font-semibold">{plan.data}</div>
+          </div>
+
+          <div className="md:col-span-2">
+            <div className="text-gray-500 text-sm">Included features</div>
+            <div className="text-sm">
+              {plan.modem_included ? 'Router included' : 'BYO Router'}
+            </div>
+            {plan.setup_fee > 0 && (
+              <div className="text-xs text-gray-500">Connection fee {formatPrice(plan.setup_fee)}</div>
+            )}
+          </div>
+
+          <div className="md:col-span-1 hidden md:block">
+            <div className="text-gray-500 text-sm">Available</div>
+            <div className="text-sm">Static IP</div>
+          </div>
+
+          <div className="md:col-span-2 flex md:block items-center justify-between gap-3">
+            <div>
+              <div className="text-xs text-gray-500">from</div>
+              <div className="text-2xl md:text-3xl font-bold text-gray-900">{formatPrice(plan.price)}<span className="text-sm text-gray-600 font-normal">/mo</span></div>
+              {monthlyNote && (
+                <div className="text-xs text-gray-500 mt-1">{monthlyNote}</div>
+              )}
+            </div>
+            <button className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2 rounded-md">SELECT</button>
           </div>
         </div>
-      )}
-
-      {/* Availability */}
-      <div className="text-sm text-gray-500 mb-4">
-        Available in: {plan.availability}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="space-y-2">
-        <button className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors">
-          View Details
-        </button>
-        <button className="w-full border border-blue-600 text-blue-600 py-2 px-4 rounded hover:bg-blue-50 transition-colors">
-          Compare Plan
-        </button>
       </div>
     </div>
   );
